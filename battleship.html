@@ -1,0 +1,160 @@
+<html>
+	<head>
+    	<meta charset="utf-8" />
+        <script src="jquery-1.10.2.min.js"></script>
+        <link rel="stylesheet" href="style.css" />
+        
+        <script>
+			$(document).ready(function(){
+				var size = 10;
+				
+				for(var i = 1; i < size; i++){
+					$("table#t1 tr td:first-child").clone().attr("data-col",i).appendTo($("table#t1 tr"));
+				}
+				
+				for(i = 1; i < size; i++){
+					$("table#t1 tr:first-child").clone().appendTo($("table#t1")).find("td").attr("data-row",i);	
+				}
+				
+				for(var i = 1; i < size; i++){
+					$("table#t2 tr td:first-child").clone().attr("data-col",i).appendTo($("table#t2 tr"));
+				}
+				
+				for(i = 1; i < size; i++){
+					$("table#t2 tr:first-child").clone().appendTo($("table#t2")).find("td").attr("data-row",i);	
+				}
+				
+				var barcos = [6,4,3,3,2];
+				
+				var totalHuman = 0;
+				var totalMachine = 0;
+				
+				for(var i = 0; i < barcos.length; i++){
+					placeShip("t1",barcos[i],i);
+					$("<li></li>").html("ShipX" + barcos[i] + ": " + barcos[i] + " left").attr("data-rem",barcos[i]).addClass("flag" + i).appendTo("ul#list1");
+					placeShip("t2",barcos[i],i);
+					$("<li></li>").html("ShipX" + barcos[i] + ": " + barcos[i] + " left").attr("data-rem",barcos[i]).addClass("flag" + i).appendTo("ul#list2");
+					totalHuman += barcos[i];
+				}
+				totalMachine = totalHuman;
+				
+				$("table tr td.tapada").click(function(){
+					$(this).removeClass("tapada").addClass("shot").unbind("click");
+					$(this).html("<img src=\"pow.png\"></img>");
+					
+					if($(this).hasClass("ship")){ //Direct hit!
+						totalMachine--;
+						var id = $(this).attr("data-id");
+						var rem = $("ul#list2 li.flag" + id).attr("data-rem") - 1;
+						$("ul#list2 li.flag" + id).attr("data-rem",rem).html("ShipX" + barcos[id] + ": " + rem + " left");
+						if(rem == 0){
+							$("ul#list2 li.flag" + id).css("text-decoration","line-through");		
+						} 
+						//console.log("Total Machine: " + totalMachine);
+						if(totalMachine == 0){
+							alert("Has ganado la partida!");
+							$("table tr td").unbind("click");
+						}
+					}
+					
+					var row = Math.floor(Math.random() * size);
+					var col = Math.floor(Math.random() * size);
+					
+					while($("table#t1 tr td[data-row=" + row + "][data-col=" + col + "]").hasClass("shot")){
+						row = Math.floor(Math.random() * size);
+						col = Math.floor(Math.random() * size);
+					}
+					
+					$("table#t1 tr td[data-row=" + row + "][data-col=" + col + "]").html("<img src=\"pow.png\"></img>").addClass("shot");
+					if($("table#t1 tr td[data-row=" + row + "][data-col=" + col + "]").hasClass("ship")){
+						totalHuman--;
+						var id = $("table#t1 tr td[data-row=" + row + "][data-col=" + col + "]").attr("data-id");
+						var rem = $("ul#list1 li.flag" + id).attr("data-rem") - 1;
+						$("ul#list1 li.flag" + id).attr("data-rem",rem).html("ShipX" + barcos[id] + ": " + rem + " left");
+						if(rem == 0){
+							$("ul#list1 li.flag" + id).css("text-decoration","line-through");		
+						}
+						//console.log("Total Human: " + totalHuman);
+						if(totalHuman == 0){
+							alert("Has perdido la partida!");
+							$("table tr td").unbind("click");
+						}
+					}
+				});
+				
+				function placeShip(idTable,shipLength,shipId){
+					var placed = false;
+					while(!placed){		
+						var rand = Math.floor(Math.random() * 2);
+						if(rand % 2 == 0){ //Lets say is horizontal
+							var row = Math.floor(Math.random() * size);
+							var col = Math.floor(Math.random() * (size - shipLength));
+							
+							//Revisar si no hay colisiones
+							var check = true;
+							for(var j = col; j < col + shipLength; j++){
+								if($("table#" + idTable + " tr td[data-row=" + row + "][data-col=" + j + "]").hasClass("ship")){
+									check = false;
+									break;
+								}
+							}
+							
+							if(check){
+								for(var j = col; j < col + shipLength; j++){
+									$("table#" + idTable + " tr td[data-row=" + row + "][data-col=" + j + "]").removeClass("sea").addClass("ship").addClass("ship" + shipId).attr("data-id",shipId);
+								}
+								placed = true;
+							}
+						}
+						else{ //Lets say is vertical
+							var row = Math.floor(Math.random() * (size - shipLength));
+							var col = Math.floor(Math.random() * size);
+							
+							//Revisar si no hay colisiones
+							var check = true;
+							for(var j = row; j < row + shipLength; j++){
+								if($("table#" + idTable + " tr td[data-row=" + j + "][data-col=" + col + "]").hasClass("ship")){
+									check = false;
+									break;
+								}
+							}
+							
+							if(check){
+								for(var j = row; j < row + shipLength; j++){
+									$("table#" + idTable + " tr td[data-row=" + j + "][data-col=" + col + "]").removeClass("sea").addClass("ship").addClass("ship" + shipId).attr("data-id",shipId);
+								}
+								placed = true;
+							}
+						}
+					}
+				}
+			});
+		</script>
+    </head>
+    <body>
+    	<h1>Human</h1>
+    	<div class="container">
+        <table id="t1">
+        	<tr>
+            	<td data-col="0" data-row="0" class="sea"></td>
+            </tr>
+        </table>
+        </div>
+        <div>
+        	<ul id="list1">
+            </ul>
+        </div>
+        <h1>Machine</h1>
+        <div class="container">
+        <table id="t2">
+        	<tr>
+            	<td data-col="0" data-row="0" class="sea tapada"></td>
+            </tr>
+        </table>
+        </div>
+        <div>
+        	<ul id="list2">
+            </ul>
+        </div>
+    </body>
+</html>
